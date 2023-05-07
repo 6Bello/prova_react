@@ -13,18 +13,32 @@ const connection = mysql.createConnection({
   database: 'larabook'
 });
 
-app.get('/getUsers', function(req, res) {
-    const query = 'SELECT * FROM users';
-    connection.query(query, function(error, results, fields) {
-      if (error) {
-        res.status(500).send(error);
-      } else {
-        res.send(results);
-      }
-    });
+function newUsers(req, res, next) {
+  if (req.query.usersLength) {
+    req.query.usersLength = parseInt(req.query.usersLength);
+  }
+  next();
+}
+
+module.exports = { newUsers };
+
+app.get('/getUsers', newUsers, function(req, res) {
+  const usersLength = req.query.usersLength || 5;
+  const query = 'SELECT * FROM users LIMIT ?';
+  connection.query(query, [usersLength], function(error, results, fields) {
+    if (error) {
+      res.status(500).send(error);
+    } else {
+      res.send(results);
+    }
+  });
 });
 
-app.post('/addUser', function(req, res) {
+
+
+
+
+app.post('/addUser', function(req, res, ) {
   const user = req.body;
   const query = 'INSERT INTO users (nome, gender, slug, email, immagine, role) VALUES (?, ?, ?, ?, ?, ?)';
   connection.query(query, [user.nome, user.gender, user.slug, user.email, user.immagine, user.role], function(error, results, fields) {

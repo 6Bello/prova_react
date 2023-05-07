@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, ScrollView } from 'react-native';
+import { View, TextInput, Button, Text, ScrollView, FlatList } from 'react-native';
+
 
 export default function App() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [users, setUsers] = useState([]);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true)
+    fetch(`http://192.168.1.181:3000/getUsers?usersLength=${users.length + 5}`) // imposta usersLength a 5
+    .then(response => response.json())
+    .then(data => {
+      setUsers(data)
+      setRefreshing(false)
+    })
+    .catch(error => console.error(error));
+  }
+
+
 
   useEffect(() => { // definisce un effetto collaterale che verrà eseguito all'avvio del componente
     fetch('http://192.168.1.181:3000/getUsers') // effettua una richiesta HTTP GET per ottenere l'elenco degli utenti dal server
@@ -28,8 +44,7 @@ export default function App() {
 
 
   return (
-    <ScrollView>
-      <View>
+    <View>
         <TextInput style={{marginTop:50}}
           placeholder="Nome"
           value={nome}
@@ -44,13 +59,9 @@ export default function App() {
           title="Add User"
           onPress={handleAddUser}
         />
-        {users.map(user => (
-          <View key={user.id}>
-            <Text style={{fontSize:10}}>{user.nome}</Text>
-            <Text>{user.email}</Text>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+        <FlatList data={users} onRefresh={onRefresh} refreshing={refreshing} renderItem={user}/>
+    </View>
   );
 }
+
+const user = ({ item }) => <Text style={{ color: "black" }}>{item.nome}</Text>
